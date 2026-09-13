@@ -23,6 +23,3 @@ python converter.py ./pasta_com_wavs
 |------|-----------|
 | `-b` | Bitrate (128k, 192k, 256k, 320k) |
 | `-o` | Pasta de saída |
-
-## License
-MIT
