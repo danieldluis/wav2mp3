@@ -5,7 +5,7 @@ github.com/danieldluis
 """
 
 import argparse
-import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -13,6 +13,9 @@ try:
     from pydub import AudioSegment
 except ImportError:
     sys.exit("pydub nao instalado. corre: pip install pydub")
+
+if not shutil.which("ffmpeg"):
+    sys.exit("ffmpeg nao encontrado. instala-o antes de usar.")
 
 
 BITRATES = ["128k", "192k", "256k", "320k"]
@@ -26,18 +29,21 @@ def convert(wav_path, output_dir=None, bitrate="192k"):
 
     out_dir = Path(output_dir) if output_dir else wav_path.parent
     out_dir.mkdir(parents=True, exist_ok=True)
-
     mp3_path = out_dir / (wav_path.stem + ".mp3")
 
     print(f"  [>] {wav_path.name} -> {mp3_path.name} ({bitrate})")
-    audio = AudioSegment.from_wav(str(wav_path))
-    audio.export(str(mp3_path), format="mp3", bitrate=bitrate)
+    try:
+        audio = AudioSegment.from_wav(str(wav_path))
+        audio.export(str(mp3_path), format="mp3", bitrate=bitrate)
+    except Exception as e:
+        print(f"  [erro] {wav_path.name}: {e}")
+        return False
+
     print(f"  [ok] {mp3_path}")
     return True
 
 
 def batch(input_dir, output_dir=None, bitrate="192k"):
-    # converte todos os .wav de uma pasta
     input_dir = Path(input_dir)
     wav_files = sorted(input_dir.glob("*.wav"))
 
@@ -76,7 +82,7 @@ exemplos:
 
     args = parser.parse_args()
 
-    if os.path.isdir(args.input):
+    if Path(args.input).is_dir():
         batch(args.input, args.output, args.bitrate)
     else:
         convert(args.input, args.output, args.bitrate)
